@@ -357,7 +357,7 @@ choice /C:123450 /N
 set _erl=%errorlevel%
 
 if %_erl%==6 exit /b
-if %_erl%==5 start https://github.com/nscl5/IDM-Activation & goto MainMenu
+if %_erl%==5 start https://github.com/Diana-Cl/IDM-Activation & goto MainMenu
 if %_erl%==4 start https://www.internetdownloadmanager.com/download.html & goto MainMenu
 if %_erl%==3 goto _reset
 if %_erl%==2 (set frz=0&goto :_activate)
@@ -612,7 +612,7 @@ exit /b
 :download_files
 
 echo:
-echo ▓ در حال انجام چند دانلود برای ایجاد کلیدهای رجیستری، لطفا صبر کنید...
+echo Triggering a few downloads to create certain registry keys, please wait...
 echo:
 
 set "file=%SystemRoot%\Temp\temp.png"
@@ -650,7 +650,7 @@ goto :Check_file
 :add_key
 
 echo:
-echo ▓ در حال افزودن کلید رجیستری...
+echo Adding registry key...
 echo:
 
 set "reg="%HKLM%" /v "AdvIntDriverEnabled2""
@@ -661,10 +661,10 @@ reg add %reg% /t REG_DWORD /d "1" /f %nul%
 
 if "%errorlevel%"=="0" (
 set "reg=%reg:"=%"
-echo   ✓ اضافه شد - !reg!
+echo Added - !reg!
 ) else (
 set "reg=%reg:"=%"
-call :_color2 %Red% "  ✗ خطا - !reg!"
+call :_color2 %Red% "Failed - !reg!"
 )
 exit /b
 
@@ -686,7 +686,7 @@ foreach ($regPath in $regPaths) {
     }
 	
 	Write-Host
-	Write-Host "▓ در حال جستجوی کلیدهای رجیستری IDM CLSID در $regPath"
+	Write-Host "Searching IDM CLSID Registry Keys in $regPath"
 	Write-Host
 	
     $subKeys = Get-ChildItem -Path $regPath -ErrorAction SilentlyContinue -ErrorVariable lockedKeys | Where-Object { $_.PSChildName -match '^\{[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}\}$' }
@@ -694,7 +694,7 @@ foreach ($regPath in $regPaths) {
     foreach ($lockedKey in $lockedKeys) {
         $leafValue = Split-Path -Path $lockedKey.TargetObject -Leaf
         $finalValues += $leafValue
-        Write-Output "$leafValue - کلید قفل شده پیدا شد"
+        Write-Output "$leafValue - Found Locked Key"
     }
 
     if ($subKeys -eq $null) {
@@ -712,30 +712,30 @@ foreach ($regPath in $regPaths) {
 
         if (($defaultValue -match "^\d+$") -and ($key.SubKeyCount -eq 0)) {
             $finalValues += $($key.PSChildName)
-            Write-Output "$($key.PSChildName) - پیدا شد: مقدار پیش‌فرض عددی و بدون زیرکلید"
+            Write-Output "$($key.PSChildName) - Found Digit In Default and No Subkeys"
             continue
         }
         if (($defaultValue -match "\+|=") -and ($key.SubKeyCount -eq 0)) {
             $finalValues += $($key.PSChildName)
-            Write-Output "$($key.PSChildName) - پیدا شد: مقدار پیش‌فرض حاوی + یا = و بدون زیرکلید"
+            Write-Output "$($key.PSChildName) - Found + or = In Default and No Subkeys"
             continue
         }
         $versionValue = Get-ItemProperty -Path "$fullPath\Version" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty '(default)' -ErrorAction SilentlyContinue
         if (($versionValue -match "^\d+$") -and ($key.SubKeyCount -eq 1)) {
             $finalValues += $($key.PSChildName)
-            Write-Output "$($key.PSChildName) - پیدا شد: مقدار عددی در Version و بدون زیرکلید دیگر"
+            Write-Output "$($key.PSChildName) - Found Digit In \Version and No Other Subkeys"
             continue
         }
         $keyValues.PSObject.Properties | ForEach-Object {
             if ($_.Name -match "MData|Model|scansk|Therad") {
                 $finalValues += $($key.PSChildName)
-                Write-Output "$($key.PSChildName) - پیدا شد: کلید حاوی MData, Model, scansk, Therad"
+                Write-Output "$($key.PSChildName) - Found MData Model scansk Therad"
                 continue
             }
         }
         if (($key.ValueCount -eq 0) -and ($key.SubKeyCount -eq 0)) {
             $finalValues += $($key.PSChildName)
-            Write-Output "$($key.PSChildName) - پیدا شد: کلید خالی"
+            Write-Output "$($key.PSChildName) - Found Empty Key"
             continue
         }
     }
@@ -746,21 +746,21 @@ $finalValues = @($finalValues | Select-Object -Unique)
 if ($finalValues -ne $null) {
     Write-Host
     if ($lockKey -ne $null) {
-        Write-Host "▓ در حال قفل کردن کلیدهای رجیستری IDM CLSID..."
+        Write-Host "Locking IDM CLSID Registry Keys..."
     }
     if ($deleteKey -ne $null) {
-        Write-Host "▓ در حال حذف کلیدهای رجیستری IDM CLSID..."
+        Write-Host "Deleting IDM CLSID Registry Keys..."
     }
     Write-Host
 } else {
-    Write-Host "کلیدهای رجیستری IDM CLSID یافت نشد."
+    Write-Host "IDM CLSID Registry Keys are not found."
 	Exit
 }
 
 if (($finalValues.Count -gt 20) -and ($toggle -ne $null)) {
 	$lockKey = $null
 	$deleteKey = 1
-    Write-Host "تعداد کلیدهای IDM بیشتر از 20 است. در حال حذف به جای قفل کردن..."
+    Write-Host "The IDM keys count is more than 20. Deleting them now instead of locking..."
 	Write-Host
 }
 
@@ -853,38 +853,24 @@ foreach ($regPath in $regPaths) {
 :regscan:
 
 ::========================================================================================================================================
-::
-::   توابع کمکی برای رنگی کردن خروجی در کنسول
-::
-::========================================================================================================================================
 
 :_color
-:: این تابع یک رشته متن را با یک رنگ پس‌زمینه و متن مشخص چاپ می‌کند
-:: %1: رنگ پس‌زمینه
-:: %2: رنگ متن (برای حالت غیر-NCS) یا رشته متن (برای حالت NCS)
-:: %3: رشته متن (برای حالت غیر-NCS)
 
 if %_NCS% EQU 1 (
-    :: استفاده از کدهای ANSI escape برای کنسول‌های مدرن
-    echo %esc%[%~1%~2%esc%[0m
+echo %esc%[%~1%~2%esc%[0m
 ) else (
-    :: استفاده از PowerShell برای سازگاری با کنسول‌های قدیمی
-    %psc% write-host -back '%1' -fore '%2' '%3'
+%psc% write-host -back '%1' -fore '%2' '%3'
 )
 exit /b
 
 :_color2
-:: این تابع دو رشته متن را با دو جفت رنگ متفاوت در یک خط چاپ می‌کند
-:: برای حالت غیر-NCS، متغیرهای رنگی به دو بخش (مثلاً "Black" "Gray") تقسیم می‌شوند
 
 if %_NCS% EQU 1 (
-    :: استفاده از کدهای ANSI escape
-    echo %esc%[%~1%~2%esc%[%~3%~4%esc%[0m
+echo %esc%[%~1%~2%esc%[%~3%~4%esc%[0m
 ) else (
-    :: استفاده از PowerShell
-    %psc% write-host -back '%1' -fore '%2' '%3' -NoNewline; write-host -back '%4' -fore '%5' '%6'
+%psc% write-host -back '%1' -fore '%2' '%3' -NoNewline; write-host -back '%4' -fore '%5' '%6'
 )
 exit /b
 
 ::========================================================================================================================================
-:: خط خالی زیر را رها کنید
+:: Leave empty line below
