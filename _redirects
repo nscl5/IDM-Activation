@@ -1,0 +1,8 @@
+# Cloudflare Pages Redirects Configuration
+# این فایل باید در root پروژه قرار بگیرد
+
+# Redirect /ias to GitHub raw PowerShell installer
+/ias https://raw.githubusercontent.com/nscl5/IDM-Activation/main/install.ps1 200
+
+# Alternative paths
+/install https://raw.githubusercontent.com/nscl5/IDM-Activation/main/IAS.cmd
